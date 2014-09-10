@@ -1651,3 +1651,14 @@ class StatsdHost(Setting):
     desc ="""\
     host:port of the statsd server to log to
     """
+
+class UseStatsdTags(Setting):
+    name = "use_statsd_tags"
+    section = "Logging"
+    cli = ["--use-statsd-tags"]
+    default = False
+    validator = validate_bool
+    action = "store_true"
+    desc = """\
+    Use tags in statsd instead of changing the metric name
+    """

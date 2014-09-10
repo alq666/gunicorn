@@ -27,6 +27,12 @@ class Statsd(Logger):
         Logger.__init__(self, cfg)
         try:
             host, port = cfg.statsd_host
+            # Use proc_name to decorate metric names
+            self.proc_name = cfg.proc_name
+            # Use statsD tags or stick the proc name in the metric name
+            self.use_statsd_tags = cfg.use_statsd_tags
+
+            # Connect to the statsD server
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self.sock.connect((host, int(port)))
         except Exception:

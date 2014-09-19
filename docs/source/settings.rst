@@ -68,7 +68,7 @@ workers
 * ``-w INT, --workers INT``
 * ``1``
 
-The number of worker process for handling requests.
+The number of worker processes for handling requests.
 
 A positive integer generally in the 2-4 x $(NUM_CORES) range. You'll
 want to vary this a bit to find the best for your particular
@@ -560,6 +560,16 @@ syslog_facility
 
 Syslog facility name
 
+statsd_host
+~~~~~~~~~~~
+
+* ``--statsd-host STATSD_ADDR``
+* ``None``
+
+host:port of the statsd server to log to
+
+.. versionadded:: 19.1
+
 enable_stdio_inheritance
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -929,15 +939,3 @@ ciphers
 * ``TLSv1``
 
 Ciphers to use (see stdlib ssl module's)
-
-Logging
--------
-
-statsd_host
-~~~~~~~~~~~
-
-* ``--statsd-host STATSD_ADDR``
-* ``None``
-
-host:port of the statsd server to log to
-

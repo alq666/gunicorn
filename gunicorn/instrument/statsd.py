@@ -81,13 +81,12 @@ class Statsd(Logger):
                         self.histogram(metric, value)
                     else:
                         pass
-             
+
             # Log to parent logger only if there is something to say
             if msg is not None and len(msg) > 0:
                 Logger.log(self, lvl, msg, *args, **kwargs)
         except Exception:
             pass
-
 
     # access logging
     def access(self, resp, req, environ, request_time):
@@ -95,7 +94,7 @@ class Statsd(Logger):
         request_time is a datetime.timedelta
         """
         Logger.access(self, resp, req, environ, request_time)
-        duration_in_ms = request_time.seconds * 1000 + float(request_time.microseconds)/10**3
+        duration_in_ms = request_time.seconds * 1000 + float(request_time.microseconds) / 10 ** 3
         self.histogram("gunicorn.request.duration", duration_in_ms)
         self.increment("gunicorn.requests", 1)
         self.increment("gunicorn.request.status.%d" % int(resp.status.split()[0]), 1)

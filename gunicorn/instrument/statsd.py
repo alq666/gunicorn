@@ -30,7 +30,7 @@ class Statsd(Logger):
             # Use proc_name to decorate metric names
             self.proc_name = cfg.proc_name
             # Use statsD tags or stick the proc name in the metric name
-            self.use_statsd_tags = cfg.use_statsd_tags
+            self.statsd_use_tags = cfg.statsd_use_tags
 
             # Connect to the statsD server
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -41,19 +41,19 @@ class Statsd(Logger):
     # Log errors and warnings
     def critical(self, msg, *args, **kwargs):
         Logger.critical(self, msg, *args, **kwargs)
-        self.increment("gunicorn.log.critical", 1)
+        self.increment("log.critical", 1)
 
     def error(self, msg, *args, **kwargs):
         Logger.error(self, msg, *args, **kwargs)
-        self.increment("gunicorn.log.error", 1)
+        self.increment("log.error", 1)
 
     def warning(self, msg, *args, **kwargs):
         Logger.warning(self, msg, *args, **kwargs)
-        self.increment("gunicorn.log.warning", 1)
+        self.increment("log.warning", 1)
 
     def exception(self, msg, *args, **kwargs):
         Logger.exception(self, msg, *args, **kwargs)
-        self.increment("gunicorn.log.exception", 1)
+        self.increment("log.exception", 1)
 
     # Special treatement for info, the most common log level
     def info(self, msg, *args, **kwargs):
@@ -94,37 +94,69 @@ class Statsd(Logger):
         request_time is a datetime.timedelta
         """
         Logger.access(self, resp, req, environ, request_time)
-        duration_in_ms = request_time.seconds * 1000 + float(request_time.microseconds) / 10 ** 3
-        self.histogram("gunicorn.request.duration", duration_in_ms)
-        self.increment("gunicorn.requests", 1)
-        self.increment("gunicorn.request.status.%d" % int(resp.status.split()[0]), 1)
+        duration_in_ms = request_time.seconds * 1000 + float(request_time.microseconds)/10**3
+        self.histogram("request.duration", duration_in_ms)
+        self.increment("requests", 1)
+        self.increment("request.status.%d" % int(resp.status.split()[0]), 1)
 
     # statsD methods
     # you can use those directly if you want
     def gauge(self, name, value):
         try:
             if self.sock:
-                self.sock.send("{0}:{1}|g".format(name, value))
+                self.sock.send("{0}:{1}|g{2}".format(self._metric_name(name),
+                                                     value,
+                                                     self._meta({"tags": ["app_name:" + self.proc_name]})))
         except Exception:
             pass
 
     def increment(self, name, value, sampling_rate=1.0):
         try:
             if self.sock:
-                self.sock.send("{0}:{1}|c|@{2}".format(name, value, sampling_rate))
+                self.sock.send("{0}:{1}|c{2}".format(self._metric_name(name),
+                                                     value,
+                                                     self._meta({"sampling_rate": sampling_rate,
+                                                                 "tags": ["app_name:" + self.proc_name]})))
         except Exception:
             pass
 
     def decrement(self, name, value, sampling_rate=1.0):
         try:
             if self.sock:
-                self.sock.send("{0}:-{1}|c|@{2}".format(name, value, sampling_rate))
+                self.sock.send("{0}:-{1}|c{2}".format(self._metric_name(name),
+                                                      value,
+                                                      self._meta({"sampling_rate": sampling_rate,
+                                                                 "tags": ["app_name:" + self.proc_name]})))
         except Exception:
             pass
 
     def histogram(self, name, value):
         try:
             if self.sock:
-                self.sock.send("{0}:{1}|ms".format(name, value))
+                self.sock.send("{0}:{1}|ms{2}".format(self._metric_name(name),
+                                                      value,
+                                                      self._meta({"tags": ["app_name:" + self.proc_name]})))
         except Exception:
             pass
+
+    def _metric_name(self, name):
+        """Updates the metric name to follow a convention:
+        gunicorn.<app_name>.metric when not using statsd tags
+        and
+        gunicorn.metric when using statsd tags
+        """
+        if self.statsd_use_tags:
+            return ".".join(("gunicorn", self.proc_name, name))
+        else:
+            return ".".join(("gunicorn", name))
+
+    def _meta(self, dct):
+        """Serialize metadata
+        sampling rate, tags are the only metadata supported
+        """
+        meta = ""
+        if "sampling_rate" in dct:
+            meta = "@{0}".format(dct.get("sampling_rate"))
+        if self.statsd_use_tags and "tags" in dct:
+            meta += "#{0}".format(",".join(dct.get("tags")))
+        return meta

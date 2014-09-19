@@ -1651,9 +1651,9 @@ class StatsdHost(Setting):
     """
 
 class UseStatsdTags(Setting):
-    name = "use_statsd_tags"
+    name = "statsd_use_tags"
     section = "Logging"
-    cli = ["--use-statsd-tags"]
+    cli = ["--statsd-use-tags"]
     default = False
     validator = validate_bool
     action = "store_true"

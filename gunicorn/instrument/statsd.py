@@ -25,6 +25,12 @@ class Statsd(Logger):
         """host, port: statsD server
         """
         Logger.__init__(self, cfg)
+        # Defensive initialization
+        self.statsd_use_tags = False
+        self.proc_name = "default"
+        self.sock = None
+
+        # Should anything fail
         try:
             host, port = cfg.statsd_host
             # Use proc_name to decorate metric names
@@ -156,7 +162,7 @@ class Statsd(Logger):
         """
         meta = ""
         if "sampling_rate" in dct:
-            meta = "@{0}".format(dct.get("sampling_rate"))
+            meta = "|@{0}".format(dct.get("sampling_rate"))
         if self.statsd_use_tags and "tags" in dct:
-            meta += "#{0}".format(",".join(dct.get("tags")))
+            meta += "|#{0}".format(",".join(dct.get("tags")))
         return meta

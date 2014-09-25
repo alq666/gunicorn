@@ -3,6 +3,8 @@
 # This file is part of gunicorn released under the MIT license.
 # See the NOTICE for more information.
 
+# Please remember to run "make -C docs html" after update "desc" attributes.
+
 import copy
 import grp
 import inspect
@@ -457,7 +459,6 @@ def get_default_config_file():
     return None
 
 
-# Please remember to run "make html" in docs/ after update "desc" attributes.
 class ConfigFile(Setting):
     name = "config"
     section = "Config File"
@@ -529,7 +530,7 @@ class Workers(Setting):
     type = int
     default = int(os.environ.get('WEB_CONCURRENCY', 1))
     desc = """\
-        The number of worker process for handling requests.
+        The number of worker processes for handling requests.
 
         A positive integer generally in the 2-4 x $(NUM_CORES) range. You'll
         want to vary this a bit to find the best for your particular
@@ -1045,11 +1046,15 @@ class ErrorLog(Setting):
     cli = ["--error-logfile", "--log-file"]
     meta = "FILE"
     validator = validate_string
-    default = None
+    default = '-'
     desc = """\
         The Error log file to write to.
 
         "-" means log to stderr.
+
+        .. versionchanged:: 19.2
+           Log to ``stderr`` by default.
+
         """
 
 

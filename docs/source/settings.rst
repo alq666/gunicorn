@@ -1,5 +1,6 @@
-
 .. _settings:
+
+.. Please update gunicorn/config.py instead.
 
 Settings
 ========
@@ -293,7 +294,7 @@ chdir
 ~~~~~
 
 * ``--chdir``
-* ``/home/benoitc/work/gunicorn/env_py3/src/gunicorn/docs``
+* ``/Users/benoitc/work/gunicorn/py27/gunicorn/docs``
 
 Chdir to specified directory before apps loading.
 
@@ -346,7 +347,7 @@ user
 ~~~~
 
 * ``-u USER, --user USER``
-* ``1000``
+* ``501``
 
 Switch worker processes to run as this user.
 
@@ -358,7 +359,7 @@ group
 ~~~~~
 
 * ``-g GROUP, --group GROUP``
-* ``1000``
+* ``20``
 
 Switch worker process to run as this group.
 
@@ -396,7 +397,7 @@ temporary directory.
 secure_scheme_headers
 ~~~~~~~~~~~~~~~~~~~~~
 
-* ``{'X-FORWARDED-SSL': 'on', 'X-FORWARDED-PROTO': 'https', 'X-FORWARDED-PROTOCOL': 'ssl'}``
+* ``{'X-FORWARDED-PROTOCOL': 'ssl', 'X-FORWARDED-PROTO': 'https', 'X-FORWARDED-SSL': 'on'}``
 
 A dictionary containing headers and values that the front-end proxy
 uses to indicate HTTPS requests. These tell gunicorn to set
@@ -469,11 +470,14 @@ errorlog
 ~~~~~~~~
 
 * ``--error-logfile FILE, --log-file FILE``
-* ``None``
+* ``-``
 
 The Error log file to write to.
 
 "-" means log to stderr.
+
+.. versionchanged:: 19.2
+   Log to ``stderr`` by default.
 
 loglevel
 ~~~~~~~~
@@ -521,7 +525,7 @@ syslog_addr
 ~~~~~~~~~~~
 
 * ``--log-syslog-to SYSLOG_ADDR``
-* ``udp://localhost:514``
+* ``unix:///var/run/syslog``
 
 Address to send syslog messages.
 
@@ -559,16 +563,6 @@ syslog_facility
 * ``user``
 
 Syslog facility name
-
-statsd_host
-~~~~~~~~~~~
-
-* ``--statsd-host STATSD_ADDR``
-* ``None``
-
-host:port of the statsd server to log to
-
-.. versionadded:: 19.1
 
 enable_stdio_inheritance
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -939,3 +933,15 @@ ciphers
 * ``TLSv1``
 
 Ciphers to use (see stdlib ssl module's)
+
+Logging
+-------
+
+statsd_host
+~~~~~~~~~~~
+
+* ``--statsd-host STATSD_ADDR``
+* ``None``
+
+host:port of the statsd server to log to
+

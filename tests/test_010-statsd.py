@@ -33,6 +33,13 @@ class MockResponse(object):
     def __init__(self, status):
         self.status = status
 
+def _setup_logger(logger):
+    # Capture logged messages
+    sio = StringIO()
+    logger.error_log.addHandler(logging.StreamHandler(sio))
+    logger.sock = MockSocket(False)
+    return sio
+
 def test_statsd_fail():
     "UDP socket fails"
     logger = Statsd(Config())
@@ -46,10 +53,7 @@ def test_statsd_fail():
 
 def test_instrument():
     logger = Statsd(Config())
-    # Capture logged messages
-    sio = StringIO()
-    logger.error_log.addHandler(logging.StreamHandler(sio))
-    logger.sock = MockSocket(False)
+    sio = _setup_logger(logger)
 
     # Regular message
     logger.info("Blah", extra={"mtype": "gauge", "metric": "test", "value": 666})
@@ -77,3 +81,32 @@ def test_instrument():
     t.eq(logger.sock.msgs[0], "gunicorn.request.duration:7000.0|ms")
     t.eq(logger.sock.msgs[1], "gunicorn.requests:1|c|@1.0")
     t.eq(logger.sock.msgs[2], "gunicorn.request.status.200:1|c|@1.0")
+
+def test_name():
+    c = Config()
+    c.set("proc_name", "testing")
+    logger = Statsd(c)
+    _setup_logger(logger)
+
+    logger.info("Blah", extra={"mtype": "gauge", "metric": "test", "value": 666})
+    t.eq(logger.sock.msgs[0], "gunicorn.testing.test:666|g")
+
+def test_tags_and_name():
+    c = Config()
+    c.set("proc_name", "tagged")
+    c.set("statsd_use_tags", True)
+    logger = Statsd(c)
+    _setup_logger(logger)
+
+    logger.info("Blah", extra={"mtype": "gauge", "metric": "test", "value": 666, "tags": ["abc", "def"]})
+    t.eq(logger.sock.msgs[0], "gunicorn.test:666|g|#abc,def,app:tagged")
+
+def test_tags_no_name():
+    c = Config()
+    c.set("statsd_use_tags", True)
+    logger = Statsd(c)
+    _setup_logger(logger)
+
+    logger.info("Blah", extra={"mtype": "gauge", "metric": "test", "value": 666, "tags": ["abc", "def"]})
+    t.eq(logger.sock.msgs[0], "gunicorn.test:666|g|#abc,def")
+

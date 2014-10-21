@@ -39,13 +39,7 @@ except ImportError:
 try:
     from asyncio import selectors
 except ImportError:
-    try:
-        from trollius import selectors
-    except ImportError:
-        raise RuntimeError("""
-        You need 'trollius' installed to use this worker with this python
-        version.
-        """)
+    from gunicorn import selectors
 
 
 class TConn(object):
@@ -108,6 +102,9 @@ class ThreadWorker(base.Worker):
         super(ThreadWorker, self).init_process()
 
     def accept(self, listener):
+        if not self.alive:
+            return
+
         try:
             client, addr = listener.accept()
             conn = TConn(self.cfg, listener, client, addr)
@@ -180,6 +177,7 @@ class ThreadWorker(base.Worker):
             if len(self.futures) >= self.worker_connections:
                 res = futures.wait(self.futures, timeout=timeout)
                 if not res:
+                    self.alive = False
                     self.log.info("max requests achieved")
                     break
 

@@ -755,21 +755,6 @@ class LimitRequestFieldSize(Setting):
         """
 
 
-class Debug(Setting):
-    name = "debug"
-    section = "Debugging"
-    cli = ["--debug"]
-    validator = validate_bool
-    action = "store_true"
-    default = False
-    desc = """\
-        Turn on debugging in the server.
-
-        **DEPRECATED**: This no functionality was removed after v18.0.
-        This option is now a no-op.
-        """
-
-
 class Reload(Setting):
     name = "reload"
     section = 'Debugging'
@@ -831,6 +816,18 @@ class PreloadApp(Setting):
         restarting workers.
         """
 
+class Sendfile(Setting):
+    name = "sendfile"
+    section = "Server Mechanics"
+    cli = ["--sendfile"]
+    validator = validate_bool
+    action = "store_true"
+    default = True
+    desc = """\
+        Enables or disables the use of ``sendfile()``.
+
+        .. versionadded:: 19.2
+        """
 
 class Chdir(Setting):
     name = "chdir"

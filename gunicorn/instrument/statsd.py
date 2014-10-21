@@ -7,6 +7,7 @@
 
 import socket
 import logging
+from re import sub
 from gunicorn.glogging import Logger
 
 # Instrumentation constants
@@ -27,10 +28,12 @@ class Statsd(Logger):
         """host, port: statsD server
         """
         Logger.__init__(self, cfg)
+
         # Defensive initialization
         self.statsd_use_tags = False
         self.proc_name = None
         self.sock = None
+        self.prefix = sub(r"^(.+[^.]+)\.*$", "\g<1>.", cfg.statsd_prefix)
 
         try:
           # Use proc_name to decorate metric names
@@ -157,14 +160,18 @@ class Statsd(Logger):
         and
         gunicorn.metric when using statsd tags
         """
+        name_parts = []
         if not self.statsd_use_tags and\
            self.proc_name is not None and\
            len(self.proc_name) > 0 and\
            self.proc_name != "gunicorn":
-            name_parts = ("gunicorn", self.proc_name, name)
+            name_parts = ["gunicorn", self.proc_name, name]
         else:
-            name_parts = ("gunicorn", name)
-        return ".".join(name_parts)
+            name_parts = ["gunicorn", name]
+        name = ".".join(name_parts)
+        if self.prefix:
+            name = self.prefix + name
+        return name
 
     def _meta(self, sampling_rate, tags):
         """Serialize metadata

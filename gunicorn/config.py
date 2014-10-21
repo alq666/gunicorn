@@ -19,6 +19,7 @@ import sys
 import textwrap
 
 from gunicorn import __version__
+from gunicorn import _compat
 from gunicorn.errors import ConfigError
 from gunicorn import six
 from gunicorn import util
@@ -120,7 +121,7 @@ class Config(object):
     @property
     def address(self):
         s = self.settings['bind'].get()
-        return [util.parse_address(six.bytes_to_str(bind)) for bind in s]
+        return [util.parse_address(_compat.bytes_to_str(bind)) for bind in s]
 
     @property
     def uid(self):
@@ -179,7 +180,7 @@ class Config(object):
             return env
 
         for e in raw_env:
-            s = six.bytes_to_str(e)
+            s = _compat.bytes_to_str(e)
             try:
                 k, v = s.split('=', 1)
             except ValueError:
@@ -624,6 +625,25 @@ class MaxRequests(Setting):
 
         If this is set to zero (the default) then the automatic worker
         restarts are disabled.
+        """
+
+
+class MaxRequestsJitter(Setting):
+    name = "max_requests_jitter"
+    section = "Worker Processes"
+    cli = ["--max-requests-jitter"]
+    meta = "INT"
+    validator = validate_pos_int
+    type = int
+    default = 0
+    desc = """\
+        The maximum jitter to add to the max-requests setting.
+
+        The jitter causes the restart per worker to be randomized by
+        ``randint(0, max_requests_jitter)``. This is intended to stagger worker
+        restarts to avoid all workers restarting at the same time.
+
+        .. versionadded:: 19.2
         """
 
 
@@ -1664,4 +1684,15 @@ class UseStatsdTags(Setting):
     action = "store_true"
     desc = """\
     Use tags in statsd instead of changing the metric name
+    """
+
+class StatsdPrefix(Setting):
+    name = "statsd_prefix"
+    section = "Logging"
+    cli = ["--statsd-prefix"]
+    meta = "STATSD_PREFIX"
+    default = ""
+    validator = validate_string
+    desc = """\
+    prefix to use when emitting statsd metrics (a trailing . is added, if not provided)
     """

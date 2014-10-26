@@ -156,9 +156,9 @@ class Statsd(Logger):
     # datagram-formatting method
     def _metric_name(self, name):
         """Updates the metric name to follow a convention:
-        gunicorn.<app_name>.metric when not using statsd tags
+        <prefix>.gunicorn.<app_name>.metric when not using statsd tags
         and
-        gunicorn.metric when using statsd tags
+        <prefix>.gunicorn.metric when using statsd tags
         """
         name_parts = []
         if not self.statsd_use_tags and\
@@ -178,7 +178,7 @@ class Statsd(Logger):
         sampling rate, tags are the only metadata supported right now
         """
         meta = ""
-        if sampling_rate is not None and sampling_rate > 0.0 and sampling_rate <= 1.0:
+        if sampling_rate is not None and 0.0 < sampling_rate and sampling_rate <= 1.0:
             meta = "|@{0}".format(sampling_rate)
         if self.statsd_use_tags:
             if self.proc_name is not None and self.proc_name != "gunicorn":

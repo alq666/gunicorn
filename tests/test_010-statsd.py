@@ -116,7 +116,7 @@ def test_prefix():
     logger = Statsd(c)
     logger.sock = MockSocket(False)
 
-    logger.info("Blah", extra={"mtype": "gauge", "metric": "gunicorn.test", "value": 666})
+    logger.info("Blah", extra={"mtype": "gauge", "metric": "test", "value": 666})
     t.eq(logger.sock.msgs[0], "test.gunicorn.test:666|g")
 
 def test_prefix_no_dot():
@@ -125,7 +125,7 @@ def test_prefix_no_dot():
     logger = Statsd(c)
     logger.sock = MockSocket(False)
 
-    logger.info("Blah", extra={"mtype": "gauge", "metric": "gunicorn.test", "value": 666})
+    logger.info("Blah", extra={"mtype": "gauge", "metric": "test", "value": 666})
     t.eq(logger.sock.msgs[0], "test.gunicorn.test:666|g")
 
 def test_prefix_multiple_dots():
@@ -134,7 +134,7 @@ def test_prefix_multiple_dots():
     logger = Statsd(c)
     logger.sock = MockSocket(False)
 
-    logger.info("Blah", extra={"mtype": "gauge", "metric": "gunicorn.test", "value": 666})
+    logger.info("Blah", extra={"mtype": "gauge", "metric": "test", "value": 666})
     t.eq(logger.sock.msgs[0], "test.gunicorn.test:666|g")
 
 def test_prefix_nested():
@@ -143,5 +143,5 @@ def test_prefix_nested():
     logger = Statsd(c)
     logger.sock = MockSocket(False)
 
-    logger.info("Blah", extra={"mtype": "gauge", "metric": "gunicorn.test", "value": 666})
+    logger.info("Blah", extra={"mtype": "gauge", "metric": "test", "value": 666})
     t.eq(logger.sock.msgs[0], "test.asdf.gunicorn.test:666|g")

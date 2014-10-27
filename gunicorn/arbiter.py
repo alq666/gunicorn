@@ -493,7 +493,7 @@ class Arbiter(object):
             self.kill_worker(pid, signal.SIGTERM)
 
         self.log.debug("{0} workers".format(len(workers)),
-                       extra={"metric": "gunicorn.workers",
+                       extra={"metric": "workers",
                               "value": len(workers),
                               "mtype": "gauge"})
 

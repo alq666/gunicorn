@@ -268,7 +268,8 @@ class Setting(object):
         return self.value
 
     def set(self, val):
-        assert six.callable(self.validator), "Invalid validator: %s" % self.name
+        if not six.callable(self.validator):
+            raise TypeError('Invalid validator: %s' % self.name)
         self.value = self.validator(val)
 
     def __lt__(self, other):
@@ -755,21 +756,6 @@ class LimitRequestFieldSize(Setting):
         """
 
 
-class Debug(Setting):
-    name = "debug"
-    section = "Debugging"
-    cli = ["--debug"]
-    validator = validate_bool
-    action = "store_true"
-    default = False
-    desc = """\
-        Turn on debugging in the server.
-
-        **DEPRECATED**: This no functionality was removed after v18.0.
-        This option is now a no-op.
-        """
-
-
 class Reload(Setting):
     name = "reload"
     section = 'Debugging'
@@ -811,7 +797,7 @@ class ConfigCheck(Setting):
     action = "store_true"
     default = False
     desc = """\
-        Check the configuration..
+        Check the configuration.
         """
 
 
@@ -831,6 +817,18 @@ class PreloadApp(Setting):
         restarting workers.
         """
 
+class Sendfile(Setting):
+    name = "sendfile"
+    section = "Server Mechanics"
+    cli = ["--sendfile"]
+    validator = validate_bool
+    action = "store_true"
+    default = True
+    desc = """\
+        Enables or disables the use of ``sendfile()``.
+
+        .. versionadded:: 19.2
+        """
 
 class Chdir(Setting):
     name = "chdir"
@@ -1182,7 +1180,7 @@ class SyslogPrefix(Setting):
     validator = validate_string
     default = None
     desc = """\
-    makes gunicorn use the parameter as program-name in the syslog entries.
+    Makes gunicorn use the parameter as program-name in the syslog entries.
 
     All entries will be prefixed by gunicorn.<prefix>. By default the program
     name is the name of the process.
@@ -1215,6 +1213,35 @@ class EnableStdioInheritance(Setting):
 
     Note: To disable the python stdout buffering, you can to set the user
     environment variable ``PYTHONUNBUFFERED`` .
+    """
+
+
+# statsD monitoring
+class StatsdHost(Setting):
+    name = "statsd_host"
+    section = "Logging"
+    cli = ["--statsd-host"]
+    meta = "STATSD_ADDR"
+    default = None
+    validator = validate_hostport
+    desc = """\
+    ``host:port`` of the statsd server to log to.
+
+    .. versionadded:: 19.1
+    """
+
+class StatsdPrefix(Setting):
+    name = "statsd_prefix"
+    section = "Logging"
+    cli = ["--statsd-prefix"]
+    meta = "STATSD_PREFIX"
+    default = ""
+    validator = validate_string
+    desc = """\
+    Prefix to use when emitting statsd metrics (a trailing ``.`` is added,
+    if not provided).
+
+    .. versionadded:: 19.2
     """
 
 
@@ -1426,7 +1453,7 @@ class WorkerAbort(Setting):
     desc = """\
         Called when a worker received the SIGABRT signal.
 
-        This call generally happen on timeout.
+        This call generally happens on timeout.
 
         The callable needs to accept one instance variable for the initialized
         Worker.
@@ -1545,8 +1572,8 @@ class ProxyProtocol(Setting):
     desc = """\
         Enable detect PROXY protocol (PROXY mode).
 
-        Allow using Http and Proxy together. It's may be useful for work with
-        stunnel as https frondend and gunicorn as http server.
+        Allow using Http and Proxy together. It may be useful for work with
+        stunnel as https frontend and gunicorn as http server.
 
         PROXY protocol: http://haproxy.1wt.eu/download/1.5/doc/proxy-protocol.txt
 
@@ -1662,26 +1689,3 @@ if sys.version_info >= (2, 7):
         desc = """\
         Ciphers to use (see stdlib ssl module's)
         """
-
-# statsD monitoring
-class StatsdHost(Setting):
-    name = "statsd_host"
-    section = "Logging"
-    cli = ["--statsd-host"]
-    meta = "STATSD_ADDR"
-    default = None
-    validator = validate_hostport
-    desc = """\
-    host:port of the statsd server to log to
-    """
-
-class StatsdPrefix(Setting):
-    name = "statsd_prefix"
-    section = "Logging"
-    cli = ["--statsd-prefix"]
-    meta = "STATSD_PREFIX"
-    default = ""
-    validator = validate_string
-    desc = """\
-    prefix to use when emitting statsd metrics (a trailing . is added, if not provided)
-    """

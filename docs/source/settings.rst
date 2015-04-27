@@ -1,6 +1,6 @@
-.. _settings:
-
 .. Please update gunicorn/config.py instead.
+
+.. _settings:
 
 Settings
 ========
@@ -244,17 +244,6 @@ on the allowed size of an HTTP request header field.
 Debugging
 ---------
 
-debug
-~~~~~
-
-* ``--debug``
-* ``False``
-
-Turn on debugging in the server.
-
-**DEPRECATED**: This no functionality was removed after v18.0.
-This option is now a no-op.
-
 reload
 ~~~~~~
 
@@ -286,7 +275,7 @@ check_config
 * ``--check-config``
 * ``False``
 
-Check the configuration..
+Check the configuration.
 
 Server Mechanics
 ----------------
@@ -303,6 +292,16 @@ By preloading an application you can save some RAM resources as well as
 speed up server boot times. Although, if you defer application loading
 to each worker process, you can reload your application code easily by
 restarting workers.
+
+sendfile
+~~~~~~~~
+
+* ``--sendfile``
+* ``True``
+
+Enables or disables the use of ``sendfile()``.
+
+.. versionadded:: 19.2
 
 chdir
 ~~~~~
@@ -565,7 +564,7 @@ syslog_prefix
 * ``--log-syslog-prefix SYSLOG_PREFIX``
 * ``None``
 
-makes gunicorn use the parameter as program-name in the syslog entries.
+Makes gunicorn use the parameter as program-name in the syslog entries.
 
 All entries will be prefixed by gunicorn.<prefix>. By default the program
 name is the name of the process.
@@ -590,6 +589,27 @@ Enable inheritance for stdio file descriptors in daemon mode.
 
 Note: To disable the python stdout buffering, you can to set the user
 environment variable ``PYTHONUNBUFFERED`` .
+
+statsd_host
+~~~~~~~~~~~
+
+* ``--statsd-host STATSD_ADDR``
+* ``None``
+
+``host:port`` of the statsd server to log to.
+
+.. versionadded:: 19.1
+
+statsd_prefix
+~~~~~~~~~~~~~
+
+* ``--statsd-prefix STATSD_PREFIX``
+* ````
+
+Prefix to use when emitting statsd metrics (a trailing ``.`` is added,
+if not provided).
+
+.. versionadded:: 19.2
 
 Process Naming
 --------------
@@ -760,7 +780,7 @@ worker_abort
 
 Called when a worker received the SIGABRT signal.
 
-This call generally happen on timeout.
+This call generally happens on timeout.
 
 The callable needs to accept one instance variable for the initialized
 Worker.
@@ -855,8 +875,8 @@ proxy_protocol
 
 Enable detect PROXY protocol (PROXY mode).
 
-Allow using Http and Proxy together. It's may be useful for work with
-stunnel as https frondend and gunicorn as http server.
+Allow using Http and Proxy together. It may be useful for work with
+stunnel as https frontend and gunicorn as http server.
 
 PROXY protocol: http://haproxy.1wt.eu/download/1.5/doc/proxy-protocol.txt
 
@@ -947,15 +967,4 @@ ciphers
 * ``TLSv1``
 
 Ciphers to use (see stdlib ssl module's)
-
-Logging
--------
-
-statsd_host
-~~~~~~~~~~~
-
-* ``--statsd-host STATSD_ADDR``
-* ``None``
-
-host:port of the statsd server to log to
 

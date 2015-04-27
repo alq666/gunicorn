@@ -406,7 +406,7 @@ def daemonize(enable_stdio_inheritance=False):
     Standard daemonization of a process.
     http://www.svbug.com/documentation/comp.unix.programmer-FAQ/faq_2.html#SEC16
     """
-    if not 'GUNICORN_FD' in os.environ:
+    if 'GUNICORN_FD' not in os.environ:
         if os.fork():
             os._exit(0)
         os.setsid()
@@ -414,7 +414,7 @@ def daemonize(enable_stdio_inheritance=False):
         if os.fork():
             os._exit(0)
 
-        os.umask(0)
+        os.umask(0o22)
 
         # In both the following any file descriptors above stdin
         # stdout and stderr are left untouched. The inheritence
@@ -503,7 +503,8 @@ def to_bytestring(value):
     """Converts a string argument to a byte string"""
     if isinstance(value, bytes):
         return value
-    assert isinstance(value, text_type)
+    if not isinstance(value, text_type):
+        raise TypeError('%r is not a string' % value)
     return value.encode("utf-8")
 
 
@@ -531,3 +532,15 @@ def warn(msg):
 
     print("!!!\n", file=sys.stderr)
     sys.stderr.flush()
+
+
+def make_fail_app(msg):
+
+    def app(environ, start_response):
+        start_response("500 Internal Server Error", [
+            ("Content-Type", "text/plain"),
+            ("Content-Length", str(len(msg)))
+        ])
+        return [msg]
+
+    return app

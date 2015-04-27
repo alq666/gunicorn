@@ -134,6 +134,10 @@ class Arbiter(object):
         self.log.info("Listening at: %s (%s)", listeners_str, self.pid)
         self.log.info("Using worker: %s", self.cfg.worker_class_str)
 
+        # check worker class requirements
+        if hasattr(self.worker_class, "check_config"):
+            self.worker_class.check_config(self.cfg, self.log)
+
         self.cfg.when_ready(self)
 
     def init_signals(self):
@@ -304,25 +308,8 @@ class Arbiter(object):
         Sleep until PIPE is readable or we timeout.
         A readable PIPE means a signal occurred.
         """
-        if self.WORKERS:
-            worker_values = list(self.WORKERS.values())
-
-            oldest = time.time()
-            for w in worker_values:
-                try:
-                    last_update = w.tmp.last_update()
-                    if last_update < oldest:
-                        oldest = last_update
-                except ValueError:
-                    pass
-
-            timeout = self.timeout - (time.time() - oldest)
-            # The timeout can be reached, so don't wait for a negative value
-            timeout = max(timeout, 1.0)
-        else:
-            timeout = 1.0
         try:
-            ready = select.select([self.PIPE[0]], [], [], timeout)
+            ready = select.select([self.PIPE[0]], [], [], 1.0)
             if not ready[0]:
                 return
             while os.read(self.PIPE[0], 1):
@@ -348,9 +335,12 @@ class Arbiter(object):
         if not graceful:
             sig = signal.SIGQUIT
         limit = time.time() + self.cfg.graceful_timeout
+        # instruct the workers to exit
+        self.kill_workers(sig)
+        # wait until the graceful timeout
         while self.WORKERS and time.time() < limit:
-            self.kill_workers(sig)
             time.sleep(0.1)
+
         self.kill_workers(signal.SIGKILL)
 
     def reexec(self):

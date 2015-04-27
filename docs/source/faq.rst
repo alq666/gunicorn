@@ -1,3 +1,5 @@
+.. _faq:
+
 ===
 FAQ
 ===
@@ -88,7 +90,7 @@ Does Gunicorn suffer from the thundering herd problem?
 The thundering herd problem occurs when many sleeping request handlers, which
 may be either threads or processes, wake up at the same time to handle a new
 request. Since only one handler will receive the request, the others will have
-been awakened for no reaon, wasting CPU cycles. At this time, Gunicorn does not
+been awakened for no reason, wasting CPU cycles. At this time, Gunicorn does not
 implement any IPC solution for coordinating between worker processes. You may
 experience high load due to this problem when using many workers or threads.
 However `a work has been started <https://github.com/benoitc/gunicorn/issues/792>`_
@@ -137,3 +139,13 @@ this queue new connections will eventually start getting dropped.
 ::
 
     $ sudo sysctl -w net.core.somaxconn="2048"
+
+
+Troubleshooting
+===============
+
+How do I fix Django reporting an ``ImproperlyConfigured`` error?
+----------------------------------------------------------------
+
+With asynchronous workers, creating URLs with the ``reverse`` function of
+``django.core.urlresolvers`` may fail. Use ``reverse_lazy`` instead.

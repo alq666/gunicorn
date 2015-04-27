@@ -7,6 +7,8 @@ from datetime import datetime
 import os
 import signal
 import sys
+import time
+import traceback
 from random import randint
 
 
@@ -43,6 +45,7 @@ class Worker(object):
         self.cfg = cfg
         self.booted = False
         self.aborted = False
+        self.reloader = None
 
         self.nr = 0
         jitter = randint(0, cfg.max_requests_jitter)
@@ -87,8 +90,8 @@ class Worker(object):
             def changed(fname):
                 self.log.info("Worker reloading: %s modified", fname)
                 os.kill(self.pid, signal.SIGQUIT)
-                raise SystemExit()
-            Reloader(callback=changed).start()
+            self.reloader = Reloader(callback=changed)
+            self.reloader.start()
 
         # set environment' variables
         if self.cfg.env:
@@ -114,13 +117,28 @@ class Worker(object):
 
         self.init_signals()
 
-        self.wsgi = self.app.wsgi()
-
         self.cfg.post_worker_init(self)
+
+        self.load_wsgi()
 
         # Enter main run loop
         self.booted = True
         self.run()
+
+    def load_wsgi(self):
+        try:
+            self.wsgi = self.app.wsgi()
+        except SyntaxError as e:
+            if not self.cfg.reload:
+                raise
+
+            self.log.exception(e)
+
+            exc_type, exc_val, exc_tb = sys.exc_info()
+            self.reloader.add_extra_file(exc_val.filename)
+
+            tb_string = traceback.format_exc(exc_tb)
+            self.wsgi = util.make_fail_app(tb_string)
 
     def init_signals(self):
         # reset signaling
@@ -149,6 +167,7 @@ class Worker(object):
         self.alive = False
         # worker_int callback
         self.cfg.worker_int(self)
+        time.sleep(0.1)
         sys.exit(0)
 
     def handle_abort(self, sig, frame):
